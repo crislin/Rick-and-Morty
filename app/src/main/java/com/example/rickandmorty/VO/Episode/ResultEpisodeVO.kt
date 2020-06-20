@@ -1,4 +1,4 @@
-package com.example.rickandmorty.VO
+package com.example.rickandmorty.VO.Episode
 
 class ResultEpisodeVO {
     var info : InfoEpisodeVO? = null

@@ -1,4 +1,4 @@
-package com.example.rickandmorty.VO
+package com.example.rickandmorty.VO.Location
 
 class LocationVO {
     var id : Int? = null

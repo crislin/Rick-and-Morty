@@ -1,6 +1,6 @@
 package com.example.rickandmorty.Services
 
-import com.example.rickandmorty.VO.ResultCharacterVO
+import com.example.rickandmorty.VO.Character.ResultCharacterVO
 import retrofit2.Call
 import retrofit2.http.GET
 

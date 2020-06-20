@@ -1,4 +1,4 @@
-package com.example.rickandmorty.VO
+package com.example.rickandmorty.VO.Episode
 
 class EpisodeVO {
     var id : Int? = null
