@@ -3,13 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Fragment.CharacterFragment"
-    android:background="@android:color/holo_purple">
+    tools:context=".Fragment.CharacterFragment">
 
-    <TextView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewCharacters"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Character"
-        android:textSize="30sp"/>
+        android:layout_marginHorizontal="10dp"/>
 
 </FrameLayout>
