@@ -12,6 +12,9 @@ interface Endpoints {
     @GET("character/")
     fun getCharacters() : Call<ResultCharacterVO>
 
+    @GET("character/")
+    fun getCharactersPage(@Query("page") page: Int?) : Call<ResultCharacterVO>
+
     @GET("character/{id}")
     fun getCharacterDetail(@Path("id") id : Int?) : Call<CharacterVO>
 }

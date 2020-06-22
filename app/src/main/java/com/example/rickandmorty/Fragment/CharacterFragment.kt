@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.rickandmorty.Adapter.CharacterAdapter
 
 import com.example.rickandmorty.R
@@ -24,38 +25,106 @@ import retrofit2.Response
  */
 class CharacterFragment : Fragment() {
 
+    var visibleItemCount : Int = 0
+    var pastVisibleItemCount : Int = 0
+    var totalItemCount : Int = 0
+    var loading : Boolean = false
+    var adapter : CharacterAdapter? = null
+    var currentPosition : Int = 0
+    lateinit var layoutManager : RecyclerView.LayoutManager
+    lateinit var recyclerView : RecyclerView
+    var characterList : MutableList<CharacterVO> = arrayListOf()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_character, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        getCharacterList()
+        layoutManager = GridLayoutManager(context, 2)
+        recyclerView = recyclerViewCharacters
+        recyclerView.layoutManager = layoutManager
+        getCharacterListFirstPage()
     }
 
-    fun getCharacterList(){
+    fun getCharacterListFirstPage(){
+        progressBar.visibility = View.VISIBLE
         val api = NetworkUtils.getRetrofitInstance(Services.getBaseUrl())
         val endpoint = api.create(Endpoints::class.java)
         val callback = endpoint.getCharacters()
 
         callback.enqueue(object : Callback<ResultCharacterVO> {
             override fun onFailure(call: Call<ResultCharacterVO>, t: Throwable) {
-                var nice = ""
+                progressBar.visibility = View.GONE
             }
 
             override fun onResponse(call: Call<ResultCharacterVO>, response: Response<ResultCharacterVO>) {
+                progressBar.visibility = View.GONE
+                loading = true
                 var resultCharacterVO = response.body()
+                var nextPage = resultCharacterVO?.info?.next?.replace("https://rickandmortyapi.com/api/character/?page=", "")?.toInt()
                 var list = resultCharacterVO?.results
-                initView(list as List<CharacterVO>)
+                setUpAdapter(list as MutableList<CharacterVO>, nextPage)
             }
 
         })
     }
 
-    fun initView(list: List<CharacterVO>){
-        recyclerViewCharacters.layoutManager = GridLayoutManager(context, 2)
-        val characterAdapter = CharacterAdapter(list)
-        recyclerViewCharacters.adapter = characterAdapter
+    fun getCharacterListNextPage(nextPage : Int?){
+        progressBar.visibility = View.VISIBLE
+        val api = NetworkUtils.getRetrofitInstance(Services.getBaseUrl())
+        val endpoint = api.create(Endpoints::class.java)
+        val callback = endpoint.getCharactersPage(nextPage)
+
+        callback.enqueue(object : Callback<ResultCharacterVO> {
+            override fun onFailure(call: Call<ResultCharacterVO>, t: Throwable) {
+                progressBar.visibility = View.GONE
+            }
+
+            override fun onResponse(call: Call<ResultCharacterVO>, response: Response<ResultCharacterVO>) {
+                progressBar.visibility = View.GONE
+                loading = true
+                var resultCharacterVO = response.body()
+                var nextPage = resultCharacterVO?.info?.next?.replace("https://rickandmortyapi.com/api/character/?page=", "")?.toInt()
+                var list = resultCharacterVO?.results
+                setUpAdapter(list as MutableList<CharacterVO>, nextPage)
+            }
+
+        })
+    }
+
+    fun setUpAdapter(list: MutableList<CharacterVO>, nextPage: Int?){
+        if (characterList.size == 0) {
+            characterList.addAll(list)
+            adapter = CharacterAdapter(characterList)
+            recyclerViewCharacters.adapter = adapter
+        } else {
+            currentPosition = (recyclerView.layoutManager as GridLayoutManager).findLastVisibleItemPosition()
+            adapter?.notifyDataSetChanged()
+            characterList.addAll(list)
+            adapter = CharacterAdapter(characterList)
+            recyclerViewCharacters.adapter = adapter
+            recyclerViewCharacters.scrollToPosition(currentPosition)
+        }
+        recyclerViewCharacters.addOnScrollListener(object : RecyclerView.OnScrollListener(){
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0){
+                    visibleItemCount = layoutManager.childCount
+                    totalItemCount = layoutManager.itemCount
+                    pastVisibleItemCount = (recyclerView.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
+                    if (loading){
+                        if ((visibleItemCount + pastVisibleItemCount) >= totalItemCount){
+                            loading = false
+                            getCharacterListNextPage(nextPage)
+                        }
+                    }
+                }
+            }
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+            }
+        })
     }
 
 }
