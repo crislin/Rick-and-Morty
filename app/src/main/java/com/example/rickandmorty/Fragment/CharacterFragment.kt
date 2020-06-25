@@ -44,7 +44,39 @@ class CharacterFragment : Fragment() {
         layoutManager = GridLayoutManager(context, 2)
         recyclerView = recyclerViewCharacters
         recyclerView.layoutManager = layoutManager
-        getCharacterListFirstPage()
+
+        var result = arguments?.getString("filter")
+        if (result != null){
+            getCharacterListFirstPageSearch(result)
+        } else {
+            getCharacterListFirstPage()
+        }
+
+    }
+
+    fun getCharacterListFirstPageSearch(search : String){
+        progressBar.visibility = View.VISIBLE
+        val api = NetworkUtils.getRetrofitInstance(Services.getBaseUrl())
+        val endpoint = api.create(Endpoints::class.java)
+        val callback = endpoint.getCharacterSearch(search)
+
+        callback.enqueue(object : Callback<ResultCharacterVO> {
+            override fun onFailure(call: Call<ResultCharacterVO>, t: Throwable) {
+                progressBar.visibility = View.GONE
+            }
+
+            override fun onResponse(call: Call<ResultCharacterVO>, response: Response<ResultCharacterVO>) {
+                progressBar.visibility = View.GONE
+                loading = true
+                var resultCharacterVO = response.body()
+                var nextPage = resultCharacterVO?.info?.next?.replace("https://rickandmortyapi.com/api/character/?page=", "")?.toInt()
+                var list = resultCharacterVO?.results
+                if (nextPage != null) {
+                    setUpAdapter(list as MutableList<CharacterVO>, nextPage)
+                }
+            }
+
+        })
     }
 
     fun getCharacterListFirstPage(){

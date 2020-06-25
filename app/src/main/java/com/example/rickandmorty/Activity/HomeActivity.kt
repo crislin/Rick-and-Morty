@@ -1,7 +1,11 @@
 package com.example.rickandmorty.Activity
 
+import android.app.Activity
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import com.example.rickandmorty.Fragment.CharacterFragment
 import com.example.rickandmorty.Fragment.EpisodeFragment
@@ -22,14 +26,17 @@ class HomeActivity : AppCompatActivity() {
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when(item.itemId){
             R.id.character -> {
+                supportActionBar?.title = "Character"
                 replaceFragment(CharacterFragment())
                 return@OnNavigationItemSelectedListener true
             }
             R.id.location -> {
+                supportActionBar?.title = "Location"
                 replaceFragment(LocationFragment())
                 return@OnNavigationItemSelectedListener true
             }
             R.id.episode -> {
+                supportActionBar?.title = "Episode"
                 replaceFragment(EpisodeFragment())
                 return@OnNavigationItemSelectedListener true
             }
@@ -42,6 +49,9 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
 
         bottomNavView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
+        setSupportActionBar(findViewById(R.id.toolbar))
+        supportActionBar?.title = "Character"
+
         replaceFragment(CharacterFragment())
     }
 
@@ -51,20 +61,35 @@ class HomeActivity : AppCompatActivity() {
         fragmentTransaction.commit()
     }
 
-    fun getCharacters(){
-        val api = NetworkUtils.getRetrofitInstance(Services.getBaseUrl())
-        val endpoint = api.create(Endpoints::class.java)
-        val callback = endpoint.getCharacters()
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.toolbar_main, menu)
+        return true
+    }
 
-        callback.enqueue(object : Callback<ResultCharacterVO>{
-            override fun onFailure(call: Call<ResultCharacterVO>, t: Throwable) {
-                var nice = ""
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.filterCharacter -> {
+                val intent = Intent(this, CharacterFilterActivity::class.java)
+                startActivityForResult(intent, 0)
             }
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
-            override fun onResponse(call: Call<ResultCharacterVO>, response: Response<ResultCharacterVO>) {
-                var nice = ""
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (data != null){
+            if (resultCode == Activity.RESULT_OK){
+                var search = data.getStringExtra("filter_values")
+                if (!search.isEmpty()){
+                    var fragment = CharacterFragment()
+                    var args = Bundle()
+                    args.putString("filter", search)
+                    fragment.arguments = args
+                    replaceFragment(fragment)
+                }
             }
-
-        })
+        }
     }
 }

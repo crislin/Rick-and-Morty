@@ -25,6 +25,8 @@ class CharacterDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_character_detail)
 
         var id = intent.getIntExtra("id", 0)
+        setSupportActionBar(findViewById(R.id.toolbar))
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         getCharacter(id)
     }
 
@@ -54,5 +56,11 @@ class CharacterDetailActivity : AppCompatActivity() {
         tvOrigin.text = characterVO.origin?.name
         tvType.text = characterVO.type
         tvLocation.text = characterVO.location?.name
+        supportActionBar?.title = characterVO.name
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 }
